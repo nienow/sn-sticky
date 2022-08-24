@@ -37,6 +37,13 @@ const TEST_CONTENT = {
   ]
 };
 
+let draggingEl;
+let draggingIndex;
+let draggingSection;
+let swapped = true;
+let targetIndex;
+let targetEl;
+
 const Editor = () => {
   const [data, setData] = useState<EditorData>({sections: [{}]});
   const [editorKit, setEditorKit] = useState(null);
@@ -96,6 +103,66 @@ const Editor = () => {
     }
   };
 
+  const onDragStart = (section, index, e) => {
+    const el = e.target;
+    const clone = el.cloneNode(true);
+    clone.style.display = 'none';
+    el.insertAdjacentElement('beforebegin', clone);
+    draggingEl = el;
+    draggingIndex = index;
+    draggingSection = section;
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    targetEl = e.currentTarget;
+    if (draggingEl !== targetEl && swapped) {
+      targetIndex = targetEl.getAttribute('data-index');
+      swapped = false;
+      const { left: _left, top: _top } = draggingEl.getBoundingClientRect();
+      const { left, top } = targetEl.getBoundingClientRect();
+      const diffLeft = left - _left;
+      const diffTop = top - _top;
+      const time = .15;
+
+      draggingEl.style.transition = `transform ${time}s`;
+      draggingEl.style.transform = `translate3d(${diffLeft}px, ${diffTop}px, 0)`;
+      targetEl.style.transition = `transform ${time}s`;
+      targetEl.style.transform = `translate3d(${diffLeft * -1}px, ${diffTop * -1}px, 0)`;
+
+      // let timer = setTimeout(() => {
+      //   draggingEl.style.transition = '';
+      //   draggingEl.style.transform = '';
+      //   target.style.transition = '';
+      //   target.style.transform = '';
+      //   if (diffLeft > 0 || diffTop > 0) {
+      //     target.insertAdjacentElement('afterend', draggingEl);
+      //   } else {
+      //     target.insertAdjacentElement('beforebegin', draggingEl);
+      //   }
+      //   swapped = true;
+      //   clearTimeout(timer);
+      // }, time * 1000)
+    }
+  };
+
+  const onDrop = () => {
+    swapped = true;
+    // draggingEl.style.transition = '';
+    // draggingEl.style.transform = '';
+    // targetEl.style.transition = '';
+    // targetEl.style.transform = '';
+    // console.log(data.sections);
+    // data.sections.splice(draggingIndex, 1);
+    // console.log(data.sections);
+    // // if (draggingIndex < targetIndex) {
+    // //   data.sections.splice(targetIndex-1, 0, draggingSection);
+    // // } else {
+    // //   data.sections.splice(targetIndex, 0, draggingSection);
+    // // }
+    // saveNote();
+  };
+
   return (
     <DialogProvider>
       <EditorContainer>
@@ -103,7 +170,10 @@ const Editor = () => {
         <EditorContent>
           {
             data.sections.map((section, i) => {
-              return <EditorSection key={i}>
+              return <EditorSection key={i} draggable={true} data-index={i}
+                                    onDragStart={(e) => {onDragStart(section, i, e)}}
+                                    onDragOver={(e) => {onDragOver(e)}}
+                                    onDrop={() => {onDrop()}}>
                   {
                     <Section section={section} onDelete={() => handleDelete(i)} onChange={(e) => handleInputChange(e, i)}></Section>
                   }
