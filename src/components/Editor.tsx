@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {createRef, useEffect, useRef, useState} from 'react';
 import EditorKit from "@standardnotes/editor-kit";
 import Header from "./Header";
 import Section from "./Section";
@@ -16,9 +16,11 @@ const EditorContent = styled.div`
   padding: 5px;
   display: flex;
   flex-wrap: wrap;
+  position: relative;
 `
 
 const EditorSection = styled.div`
+  position: absolute;
   border: 1px solid var(--sn-stylekit-border-color);
   display: flex;
   flex-direction: column;
@@ -47,6 +49,8 @@ let targetEl;
 const Editor = () => {
   const [data, setData] = useState<EditorData>({sections: [{}]});
   const [editorKit, setEditorKit] = useState(null);
+  const sectionRefs = useRef([]);
+
 
   useEffect(() => {
     setEditorKit(new EditorKit({
@@ -59,7 +63,19 @@ const Editor = () => {
       supportsFileSafe: false
     }));
     initializeText(JSON.stringify(TEST_CONTENT));
+
+
   }, []);
+
+  useEffect(() => {
+    if (sectionRefs.current[1]) {
+      sectionRefs.current.forEach((ref, index) => {
+        if (ref.current) {
+          ref.current.style.transform = 'translate(' + (310 * (index % 2)) +'px, ' + 210 * Math.floor(index / 2) + 'px)';
+        }
+      });
+    }
+  }, [sectionRefs.current]);
 
   const initializeText = (text) => {
     let parsedData;
@@ -75,6 +91,8 @@ const Editor = () => {
       parsedData = {rows: 2, columns: 2, sections: [[{text: text || ''}, {}], [{}, {}]]};
     }
     setData(parsedData);
+    sectionRefs.current = parsedData.sections.map((_element, i) => sectionRefs.current[i] ?? createRef());
+    console.log(sectionRefs.current);
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>, section) => {
@@ -170,7 +188,7 @@ const Editor = () => {
         <EditorContent>
           {
             data.sections.map((section, i) => {
-              return <EditorSection key={i} draggable={true} data-index={i}
+              return <EditorSection ref={sectionRefs.current[i]} key={i} draggable={true} data-index={i}
                                     onDragStart={(e) => {onDragStart(section, i, e)}}
                                     onDragOver={(e) => {onDragOver(e)}}
                                     onDrop={() => {onDrop()}}>
