@@ -3,6 +3,7 @@ export interface EditorData {
 }
 
 export interface SectionData {
+  index?: number;
   title?: string;
   text?: string;
 }

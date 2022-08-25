@@ -31,26 +31,27 @@ const EditorSection = styled.div`
 
 const TEST_CONTENT = {
   sections: [
-    {title: 'Title 1', text: 'Text 1'},
-    {title: 'Title 2', text: 'Text 2'},
-    {title: 'Title 3', text: 'Text 3 '},
-    {title: 'Title 4', text: 'Text 4'},
-    {title: 'Title 5', text: 'Text 5'}
+    {title: 'Title 1', text: 'Text 1', index: 0},
+    {title: 'Title 2', text: 'Text 2', index: 1},
+    {title: 'Title 3', text: 'Text 3', index: 2},
+    {title: 'Title 4', text: 'Text 4', index: 3},
+    {title: 'Title 5', text: 'Text 5', index: 4}
   ]
 };
 
 let draggingEl;
 let draggingIndex;
 let draggingSection;
-let swapped = true;
 let targetIndex;
 let targetEl;
+let noteWidth = 0;
+let numColumns = 0;
 
 const Editor = () => {
   const [data, setData] = useState<EditorData>({sections: [{}]});
   const [editorKit, setEditorKit] = useState(null);
   const sectionRefs = useRef([]);
-
+  const contentRef = useRef<HTMLDivElement>();
 
   useEffect(() => {
     setEditorKit(new EditorKit({
@@ -67,14 +68,33 @@ const Editor = () => {
 
   }, []);
 
-  useEffect(() => {
-    if (sectionRefs.current[1]) {
-      sectionRefs.current.forEach((ref, index) => {
+  const handleResize = () => {
+    if (contentRef.current && sectionRefs.current[1]) {
+      console.log('handle resize');
+      const totalWidth = contentRef.current.clientWidth-10;
+      numColumns = Math.floor(totalWidth / 300);
+      noteWidth = totalWidth / numColumns - 10;
+      sectionRefs.current.forEach((ref) => {
         if (ref.current) {
-          ref.current.style.transform = 'translate(' + (310 * (index % 2)) +'px, ' + 210 * Math.floor(index / 2) + 'px)';
+          const index = ref.current.getAttribute('data-index');
+          ref.current.style.width = noteWidth + 'px';
+          ref.current.style.transform = 'translate(' + ((noteWidth + 10) * (index % numColumns)) +'px, ' + 210 * Math.floor(index / numColumns) + 'px)';
         }
       });
     }
+  };
+
+  useEffect(() => {
+    console.log('add event listener');
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+    // Call handler right away so state gets updated with initial window size
+    handleResize();
+    // Remove event listener on cleanup
+    return () => {
+      console.log('remove event listener');
+      window.removeEventListener("resize", handleResize)
+    };
   }, [sectionRefs.current]);
 
   const initializeText = (text) => {
@@ -92,7 +112,6 @@ const Editor = () => {
     }
     setData(parsedData);
     sectionRefs.current = parsedData.sections.map((_element, i) => sectionRefs.current[i] ?? createRef());
-    console.log(sectionRefs.current);
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>, section) => {
@@ -123,9 +142,9 @@ const Editor = () => {
 
   const onDragStart = (section, index, e) => {
     const el = e.target;
-    const clone = el.cloneNode(true);
-    clone.style.display = 'none';
-    el.insertAdjacentElement('beforebegin', clone);
+    // const clone = el.cloneNode(true);
+    // clone.style.display = 'none';
+    // el.insertAdjacentElement('beforebegin', clone);
     draggingEl = el;
     draggingIndex = index;
     draggingSection = section;
@@ -133,62 +152,53 @@ const Editor = () => {
 
   const onDragOver = (e) => {
     e.preventDefault();
-    targetEl = e.currentTarget;
-    if (draggingEl !== targetEl && swapped) {
-      targetIndex = targetEl.getAttribute('data-index');
-      swapped = false;
-      const { left: _left, top: _top } = draggingEl.getBoundingClientRect();
-      const { left, top } = targetEl.getBoundingClientRect();
-      const diffLeft = left - _left;
-      const diffTop = top - _top;
-      const time = .15;
+    const newTargetEl = e.currentTarget;
+    const newTargetIndex = newTargetEl.getAttribute('data-index');
 
-      draggingEl.style.transition = `transform ${time}s`;
-      draggingEl.style.transform = `translate3d(${diffLeft}px, ${diffTop}px, 0)`;
-      targetEl.style.transition = `transform ${time}s`;
-      targetEl.style.transform = `translate3d(${diffLeft * -1}px, ${diffTop * -1}px, 0)`;
+    if (draggingEl !== newTargetEl && newTargetIndex !== targetIndex) {
+      targetEl = newTargetEl;
+      targetIndex = newTargetIndex;
+      console.log('onDragOver');
+      const oldDraggingIndex = draggingEl.getAttribute('data-index');
+      // targetEl.setAttribute('data-index', oldDraggingIndex);
+      // draggingEl.style.transform = 'translate(' + ((noteWidth + 10) * (targetIndex % numColumns)) +'px, ' + 210 * Math.floor(targetIndex / numColumns) + 'px)';
 
-      // let timer = setTimeout(() => {
-      //   draggingEl.style.transition = '';
-      //   draggingEl.style.transform = '';
-      //   target.style.transition = '';
-      //   target.style.transform = '';
-      //   if (diffLeft > 0 || diffTop > 0) {
-      //     target.insertAdjacentElement('afterend', draggingEl);
-      //   } else {
-      //     target.insertAdjacentElement('beforebegin', draggingEl);
-      //   }
-      //   swapped = true;
-      //   clearTimeout(timer);
-      // }, time * 1000)
+      sectionRefs.current.forEach((ref) => {
+        let oldIndex = ref.current.getAttribute('data-index');
+        let newIndex = oldIndex;
+        if (targetIndex > oldDraggingIndex) {
+          if (oldIndex > oldDraggingIndex && oldIndex <= targetIndex) {
+            newIndex--;
+          }
+        } else if (oldIndex < oldDraggingIndex && oldIndex >= targetIndex) {
+          newIndex++;
+        }
+        ref.current.setAttribute('data-index', newIndex);
+      });
+
+      draggingEl.setAttribute('data-index', targetIndex);
+
+
+      handleResize();
     }
   };
 
   const onDrop = () => {
-    swapped = true;
-    // draggingEl.style.transition = '';
-    // draggingEl.style.transform = '';
-    // targetEl.style.transition = '';
-    // targetEl.style.transform = '';
-    // console.log(data.sections);
-    // data.sections.splice(draggingIndex, 1);
-    // console.log(data.sections);
-    // // if (draggingIndex < targetIndex) {
-    // //   data.sections.splice(targetIndex-1, 0, draggingSection);
-    // // } else {
-    // //   data.sections.splice(targetIndex, 0, draggingSection);
-    // // }
-    // saveNote();
+    sectionRefs.current.forEach((ref) => {
+      ref.current.getAttribute('data-index');
+    });
   };
+
+  console.log('render');
 
   return (
     <DialogProvider>
       <EditorContainer>
         <Header data={data} saveNote={saveNote}></Header>
-        <EditorContent>
+        <EditorContent ref={contentRef}>
           {
             data.sections.map((section, i) => {
-              return <EditorSection ref={sectionRefs.current[i]} key={i} draggable={true} data-index={i}
+              return <EditorSection ref={sectionRefs.current[section.index]} key={i} draggable={true} data-index={i}
                                     onDragStart={(e) => {onDragStart(section, i, e)}}
                                     onDragOver={(e) => {onDragOver(e)}}
                                     onDrop={() => {onDrop()}}>
