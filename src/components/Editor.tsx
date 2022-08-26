@@ -29,28 +29,27 @@ const EditorSection = styled.div`
   margin: 5px;
 `
 
-const TEST_CONTENT = {
-  sections: [
-    {title: 'Title 1', text: 'Text 1', index: 0},
-    {title: 'Title 2', text: 'Text 2', index: 1},
-    {title: 'Title 3', text: 'Text 3', index: 2},
-    {title: 'Title 4', text: 'Text 4', index: 3},
-    {title: 'Title 5', text: 'Text 5', index: 4}
-  ]
+const TEST_CONTENT: EditorData = {
+  sections: {
+    1: {title: 'Title 1', text: 'Text 1', index: 0},
+    2: {title: 'Title 2', text: 'Text 2', index: 1},
+    3: {title: 'Title 3', text: 'Text 3', index: 2},
+    4: {title: 'Title 4', text: 'Text 4', index: 3},
+    5: {title: 'Title 5', text: 'Text 5', index: 4}
+  }
 };
 
 let draggingEl;
-let draggingIndex;
 let draggingSection;
-let targetIndex;
 let targetEl;
+let targetId;
 let noteWidth = 0;
 let numColumns = 0;
 
 const Editor = () => {
   const [data, setData] = useState<EditorData>({sections: [{}]});
   const [editorKit, setEditorKit] = useState(null);
-  const sectionRefs = useRef([]);
+  const sectionRefs = useRef({});
   const contentRef = useRef<HTMLDivElement>();
 
   useEffect(() => {
@@ -69,16 +68,16 @@ const Editor = () => {
   }, []);
 
   const handleResize = () => {
-    if (contentRef.current && sectionRefs.current[1]) {
+    if (contentRef.current && sectionRefs.current) {
       console.log('handle resize');
       const totalWidth = contentRef.current.clientWidth-10;
       numColumns = Math.floor(totalWidth / 300);
       noteWidth = totalWidth / numColumns - 10;
-      sectionRefs.current.forEach((ref) => {
-        if (ref.current) {
-          const index = ref.current.getAttribute('data-index');
-          ref.current.style.width = noteWidth + 'px';
-          ref.current.style.transform = 'translate(' + ((noteWidth + 10) * (index % numColumns)) +'px, ' + 210 * Math.floor(index / numColumns) + 'px)';
+      Object.entries(data.sections).forEach(([sectionId,section]) => {
+        const sectionRef = sectionRefs.current[sectionId]?.current;
+        if (sectionRef) {
+          sectionRef.style.width = noteWidth + 'px';
+          sectionRef.style.transform = 'translate(' + ((noteWidth + 10) * (section.index % numColumns)) +'px, ' + 210 * Math.floor(section.index / numColumns) + 'px)';
         }
       });
     }
@@ -95,7 +94,7 @@ const Editor = () => {
       console.log('remove event listener');
       window.removeEventListener("resize", handleResize)
     };
-  }, [sectionRefs.current]);
+  }, [data]);
 
   const initializeText = (text) => {
     let parsedData;
@@ -111,7 +110,9 @@ const Editor = () => {
       parsedData = {rows: 2, columns: 2, sections: [[{text: text || ''}, {}], [{}, {}]]};
     }
     setData(parsedData);
-    sectionRefs.current = parsedData.sections.map((_element, i) => sectionRefs.current[i] ?? createRef());
+    Object.keys(parsedData.sections).forEach(key => {
+      sectionRefs.current[key] = sectionRefs.current[key] ?? createRef()
+    });
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>, section) => {
@@ -125,8 +126,8 @@ const Editor = () => {
     saveNote();
   };
 
-  const handleDelete = (section) => {
-    data.sections.splice(section, 1);
+  const handleDelete = (sectionId) => {
+    delete data.sections[sectionId];
     saveNote();
   };
 
@@ -140,31 +141,33 @@ const Editor = () => {
     }
   };
 
-  const onDragStart = (section, index, e) => {
+  const onDragStart = (sectionId, e) => {
     const el = e.target;
     // const clone = el.cloneNode(true);
     // clone.style.display = 'none';
     // el.insertAdjacentElement('beforebegin', clone);
     draggingEl = el;
-    draggingIndex = index;
-    draggingSection = section;
+    // draggingIndex = index;
+    draggingSection = sectionId;
   };
 
   const onDragOver = (e) => {
     e.preventDefault();
     const newTargetEl = e.currentTarget;
-    const newTargetIndex = newTargetEl.getAttribute('data-index');
+    const newTargetId = newTargetEl.getAttribute('data-id');
 
-    if (draggingEl !== newTargetEl && newTargetIndex !== targetIndex) {
+    if (draggingEl !== newTargetEl && newTargetId !== targetId) {
       targetEl = newTargetEl;
-      targetIndex = newTargetIndex;
+      targetId = newTargetId;
       console.log('onDragOver');
-      const oldDraggingIndex = draggingEl.getAttribute('data-index');
+      const oldDraggingIndex = data.sections[draggingEl.getAttribute('data-id')].index;
+      const targetIndex = data.sections[targetEl.getAttribute('data-id')].index;
       // targetEl.setAttribute('data-index', oldDraggingIndex);
       // draggingEl.style.transform = 'translate(' + ((noteWidth + 10) * (targetIndex % numColumns)) +'px, ' + 210 * Math.floor(targetIndex / numColumns) + 'px)';
 
-      sectionRefs.current.forEach((ref) => {
-        let oldIndex = ref.current.getAttribute('data-index');
+
+      Object.values(data.sections).forEach(section => {
+        let oldIndex = section.index;
         let newIndex = oldIndex;
         if (targetIndex > oldDraggingIndex) {
           if (oldIndex > oldDraggingIndex && oldIndex <= targetIndex) {
@@ -173,20 +176,22 @@ const Editor = () => {
         } else if (oldIndex < oldDraggingIndex && oldIndex >= targetIndex) {
           newIndex++;
         }
-        ref.current.setAttribute('data-index', newIndex);
+        section.index = newIndex;
       });
 
-      draggingEl.setAttribute('data-index', targetIndex);
-
+      data.sections[draggingSection].index = targetIndex;
+      console.log(targetIndex);
 
       handleResize();
     }
   };
 
   const onDrop = () => {
-    sectionRefs.current.forEach((ref) => {
-      ref.current.getAttribute('data-index');
-    });
+    draggingEl = undefined;
+    draggingSection = undefined;
+    targetEl = undefined;
+    targetId = undefined;
+    saveNote();
   };
 
   console.log('render');
@@ -197,13 +202,13 @@ const Editor = () => {
         <Header data={data} saveNote={saveNote}></Header>
         <EditorContent ref={contentRef}>
           {
-            data.sections.map((section, i) => {
-              return <EditorSection ref={sectionRefs.current[section.index]} key={i} draggable={true} data-index={i}
-                                    onDragStart={(e) => {onDragStart(section, i, e)}}
+            Object.keys(data.sections).map((sectionId) => {
+              return <EditorSection ref={sectionRefs.current[sectionId]} key={sectionId} draggable={true} data-id={sectionId}
+                                    onDragStart={(e) => {onDragStart(sectionId, e)}}
                                     onDragOver={(e) => {onDragOver(e)}}
                                     onDrop={() => {onDrop()}}>
                   {
-                    <Section section={section} onDelete={() => handleDelete(i)} onChange={(e) => handleInputChange(e, i)}></Section>
+                    <Section section={data.sections[sectionId]} onDelete={() => handleDelete(sectionId)} onChange={(e) => handleInputChange(e, sectionId)}></Section>
                   }
                 </EditorSection>;
             })

@@ -15,7 +15,7 @@ interface Params {
 
 const Header = (params: Params) => {
   const addSection = () => {
-    params.data.sections.unshift({});
+    params.data.sections[new Date().getTime()] = {index: 0};
     params.saveNote();
   };
 

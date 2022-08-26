@@ -1,8 +1,9 @@
 export interface EditorData {
-  sections: SectionData[];
+  sections: {[key: number]: SectionData};
 }
 
 export interface SectionData {
+  id?: number;
   index?: number;
   title?: string;
   text?: string;
