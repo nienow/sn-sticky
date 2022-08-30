@@ -10,18 +10,15 @@ const HeaderContainer = styled.div`
 
 interface Params {
   data: EditorData;
-  saveNote: () => void;
+  addSection: () => void;
 }
 
 const Header = (params: Params) => {
-  const addSection = () => {
-    params.data.sections[new Date().getTime()] = {index: 0};
-    params.saveNote();
-  };
+
 
   return (
     <HeaderContainer>
-      <button onClick={addSection}>+ Add</button>
+      <button onClick={params.addSection}>+ Add</button>
     </HeaderContainer>
   );
 }

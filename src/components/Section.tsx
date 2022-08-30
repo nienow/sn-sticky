@@ -65,7 +65,14 @@ const Section = (params: Params) => {
   return (
     <>
       <SectionTitle>
-        <DragHandle>-</DragHandle>
+        <DragHandle>
+          <svg name="drag-handle" width="10" height="10">
+            <ellipse fill="#000000"cx="2" cy="2" rx="2" ry="2"/>
+            <ellipse fill="#000000"cx="8" cy="8" rx="2" ry="2"/>
+            <ellipse fill="#000000"cx="2" cy="8" rx="2" ry="2"/>
+            <ellipse fill="#000000"cx="8" cy="2" rx="2" ry="2"/>
+          </svg>
+        </DragHandle>
         <SectionTitleInput type="text" name="title" value={params.section.title || ''} onChange={params.onChange}/>
         <DeleteButton onClick={deleteSection}>X</DeleteButton>
       </SectionTitle>

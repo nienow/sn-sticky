@@ -2,12 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.scss';
 
-import Editor from './components/Editor';
+import App from './components/App';
 import './stylesheets/main.scss';
 
 ReactDOM.render(
   <React.StrictMode>
-    <Editor/>
+    <App/>
   </React.StrictMode>,
   document.getElementById('root')
 );
