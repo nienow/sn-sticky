@@ -27,6 +27,11 @@ const EditorSection = styled.div`
   margin: 5px;
 `
 
+const DragGhost = styled.div`
+  position: fixed;
+  top: -300px;
+`
+
 const TEST_CONTENT: EditorData = {
   sections: {
     1: {title: 'Title 1', text: 'Text 1', index: 0},
@@ -39,14 +44,14 @@ const TEST_CONTENT: EditorData = {
 
 let draggingSectionId;
 let targetId;
-let mouseDownEl;
+// let mouseDownEl;
 
 const App = () => {
   const [data, setData] = useState<EditorData>({sections: [{}]});
   const [editorKit, setEditorKit] = useState(null);
   const sectionRefs = useRef({});
   const contentRef = useRef<HTMLDivElement>();
-  const headerRef = useRef<HTMLDivElement>();
+  const ghostRef = useRef<HTMLDivElement>();
 
   useEffect(() => {
     setEditorKit(new EditorKit({
@@ -140,9 +145,9 @@ const App = () => {
     }
   };
 
-  const onMouseDown = (e) => {
-    mouseDownEl = e.target;
-  };
+  // const onMouseDown = (e) => {
+  //   mouseDownEl = e.target;
+  // };
 
   const onDragStart = (sectionId, e) => {
     // const handle = e.target.querySelector('[name="drag-handle"]');
@@ -155,6 +160,13 @@ const App = () => {
     //   e.preventDefault();
     // }
     draggingSectionId = sectionId;
+    // const ghost = document.createElement('div');
+    // ghost.textContent = 'I am ghost';
+    // ghost.style.position = 'fixed';
+    // ghost.style.left = '-999px';
+    // document.body.append(ghost);
+    // ghostRef.current.textContent = data.sections[draggingSectionId].title;
+    e.dataTransfer.setDragImage(ghostRef.current, 0, 0);
   };
 
   const onDragOver = (e) => {
@@ -167,8 +179,6 @@ const App = () => {
       console.log('onDragOver');
       const oldDraggingIndex = data.sections[draggingSectionId].index;
       const targetIndex = data.sections[targetId].index;
-      console.log(oldDraggingIndex);
-      console.log(targetIndex);
 
       Object.values(data.sections).forEach(section => {
         let index = section.index;
@@ -212,7 +222,7 @@ const App = () => {
         {
           Object.keys(data.sections).map((sectionId) => {
             return <EditorSection ref={sectionRefs.current[sectionId]} key={sectionId} draggable={true} data-id={sectionId}
-                                  onMouseDown={onMouseDown}
+              // onMouseDown={onMouseDown}
                                   onDragStart={(e) => {
                                     onDragStart(sectionId, e)
                                   }}
@@ -230,6 +240,7 @@ const App = () => {
           })
         }
       </EditorContent>
+      <DragGhost ref={ghostRef}></DragGhost>
     </EditorContainer>
   );
 }

@@ -1,6 +1,8 @@
 import React from 'react';
 import {SectionData} from "../EditorData";
 import styled from "styled-components";
+import {useDialog} from "../providers/DialogProvider";
+import DeleteIcon from "./icons/DeleteIcon";
 
 
 const SectionTitle = styled.div`
@@ -38,17 +40,12 @@ const DeleteButton = styled.button`
   border: none;
   outline: none;
   cursor: pointer;
-  padding: 0 10px;
+  padding: 10px;
   background-color: inherit;
 
   &:hover {
     background-color: var(--sn-stylekit-secondary-contrast-background-color);
   }
-`;
-
-const DragHandle = styled.div`
-  cursor: move;
-  padding: 0 10px;
 `;
 
 interface Params {
@@ -58,23 +55,23 @@ interface Params {
 }
 
 const Section = (params: Params) => {
+  const {confirm} = useDialog();
+
   const deleteSection = () => {
+    if (params.section.text) {
+      confirm('Are you sure you want to delete this note?', () => {
+        params.onDelete();
+      });
+    } else {
       params.onDelete();
+    }
   };
 
   return (
     <>
       <SectionTitle>
-        <DragHandle>
-          <svg name="drag-handle" width="10" height="10">
-            <ellipse fill="#000000"cx="2" cy="2" rx="2" ry="2"/>
-            <ellipse fill="#000000"cx="8" cy="8" rx="2" ry="2"/>
-            <ellipse fill="#000000"cx="2" cy="8" rx="2" ry="2"/>
-            <ellipse fill="#000000"cx="8" cy="2" rx="2" ry="2"/>
-          </svg>
-        </DragHandle>
         <SectionTitleInput type="text" name="title" value={params.section.title || ''} onChange={params.onChange}/>
-        <DeleteButton onClick={deleteSection}>X</DeleteButton>
+        <DeleteButton onClick={deleteSection}><DeleteIcon/></DeleteButton>
       </SectionTitle>
       <SectionTextArea tabIndex={1} name="value" value={params.section.text || ''} onChange={params.onChange}/>
     </>
