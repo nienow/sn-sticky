@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {SectionData} from "../EditorData";
 import styled from "styled-components";
 import {useDialog} from "../providers/DialogProvider";
@@ -56,6 +56,8 @@ interface Params {
 
 const Section = (params: Params) => {
   const {confirm} = useDialog();
+  const [text, setText] = useState(params.section.text || '');
+  const [title, setTitle] = useState(params.section.title || '');
 
   const deleteSection = () => {
     if (params.section.text) {
@@ -67,13 +69,23 @@ const Section = (params: Params) => {
     }
   };
 
+  const textOnChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(event.target.value);
+    params.onChange(event);
+  };
+
+  const titleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(event.target.value);
+    params.onChange(event);
+  };
+
   return (
     <>
       <SectionTitle>
-        <SectionTitleInput type="text" name="title" value={params.section.title || ''} onChange={params.onChange}/>
+        <SectionTitleInput type="text" name="title" value={title} onChange={titleOnChange}/>
         <DeleteButton onClick={deleteSection}><DeleteIcon/></DeleteButton>
       </SectionTitle>
-      <SectionTextArea tabIndex={1} name="value" value={params.section.text || ''} onChange={params.onChange}/>
+      <SectionTextArea name="value" value={text} onChange={textOnChange}/>
     </>
   );
 };
