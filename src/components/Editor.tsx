@@ -25,6 +25,9 @@ const App = () => {
       mode: 'plaintext',
       supportsFileSafe: false
     }));
+
+    // Uncomment to use test data
+    // initializeText(TestData);
   }, []);
 
   const initializeText = (text) => {

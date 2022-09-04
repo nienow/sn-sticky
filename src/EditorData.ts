@@ -5,7 +5,6 @@ export interface EditorData {
 }
 
 export interface SectionData {
-  id: number;
   index?: number;
   title?: string;
   text?: string;
@@ -24,7 +23,6 @@ export const newEditorData = (): EditorData => {
 
 export const newNoteData = (): SectionData => {
   return {
-    id: new Date().getTime(),
     index: 0
   };
 };
