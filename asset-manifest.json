@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/sn-sticky/static/css/main.72371a3c.css",
+    "main.js": "/sn-sticky/static/js/main.a5acffc6.js",
+    "index.html": "/sn-sticky/index.html",
+    "main.72371a3c.css.map": "/sn-sticky/static/css/main.72371a3c.css.map",
+    "main.a5acffc6.js.map": "/sn-sticky/static/js/main.a5acffc6.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.72371a3c.css",
+    "static/js/main.a5acffc6.js"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "identifier": "nienow.sticky",
+  "name": "Sticky Notes",
+  "content_type": "SN|Component",
+  "area": "editor-editor",
+  "version": "0.1.0",
+  "description": "Sticky Note editor",
+  "url": "http://localhost:3000/sn-sticky",
+  "download_url": "",
+  "latest_url": "",
+  "thumbnail_url": ""
+}
