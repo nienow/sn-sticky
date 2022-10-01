@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import EditorKit from "@standardnotes/editor-kit";
 import Header from "./Header";
-import {EditorData, newNoteData, transformEditorData} from "../EditorData";
+import {EditorData} from "../EditorData";
 import styled from "styled-components";
 import EditorContent from "./EditorContent";
+import {newNoteData, transformEditorData} from "../transformations";
 
 const EditorContainer = styled.div`
   display: flex;
