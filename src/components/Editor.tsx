@@ -4,7 +4,8 @@ import Header from "./Header";
 import {EditorData} from "../EditorData";
 import styled from "styled-components";
 import EditorContent from "./EditorContent";
-import {newNoteData, transformEditorData} from "../transformations";
+import {newEditorData, newNoteData, transformEditorData} from "../transformations";
+import Unsupported from "./Unsupported";
 
 const EditorContainer = styled.div`
   display: flex;
@@ -13,7 +14,8 @@ const EditorContainer = styled.div`
 `
 
 const App = () => {
-  const [data, setData] = useState<EditorData>(null);
+  const [data, setData] = useState<EditorData>(undefined);
+  const [unsupported, setUnsupported] = useState(false);
   const [editorKit, setEditorKit] = useState(null);
 
   useEffect(() => {
@@ -32,17 +34,18 @@ const App = () => {
   }, []);
 
   const initializeText = (text) => {
-    let parsedData: EditorData;
-    if (text) {
-      if (text.indexOf('{') === 0) {
-        try {
-          parsedData = JSON.parse(text);
-        } catch {
-        }
-      }
+    const data = transformEditorData(text);
+    if (data) {
+      setData(data);
+    } else {
+      setUnsupported(true);
     }
-    parsedData = transformEditorData(parsedData);
-    setData(parsedData);
+  };
+
+  const eraseDataAndStartNewNote = () => {
+    setUnsupported(false);
+    setData(newEditorData());
+    saveNote();
   };
 
   const saveNote = () => {
@@ -83,6 +86,10 @@ const App = () => {
         <EditorContent saveNote={saveNote} data={data} handleDelete={handleDelete}></EditorContent>
       </EditorContainer>
     );
+  } else if (unsupported) {
+    return (
+      <Unsupported eraseFn={eraseDataAndStartNewNote}></Unsupported>
+    )
   }
 }
 

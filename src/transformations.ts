@@ -4,7 +4,9 @@ export const newEditorData = (): EditorData => {
   return {
     editor: NienowSticky,
     version: DataVersion,
-    sections: {}
+    sections: {
+      0: {index: 0}
+    }
   };
 };
 
@@ -14,11 +16,21 @@ export const newNoteData = (): SectionData => {
   };
 };
 
-export const transformEditorData = (data: any): EditorData => {
-  if (data && data.editor === NienowSticky && data.version === 1) {
-    return data;
-  } else if (data && data.editor === NienowGrid && data.version === 1) {
-    return transformFromGrid(data);
+export const transformEditorData = (text: string): EditorData => {
+  if (text) {
+    let parsedData: EditorData;
+    if (text.indexOf('{') === 0) {
+      try {
+        parsedData = JSON.parse(text);
+        if (parsedData.editor === NienowSticky && parsedData.version === 1) {
+          return parsedData;
+        } else if (parsedData.editor === NienowGrid && parsedData.version === 1) {
+          return transformFromGrid(parsedData);
+        }
+      } catch {
+      }
+    }
+    return null;
   } else {
     return newEditorData();
   }

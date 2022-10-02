@@ -3,7 +3,7 @@ import {transformEditorData} from './transformations';
 
 describe('transformations', () => {
   test('transform from grid editor', () => {
-    const result = transformEditorData({
+    const result = transformEditorData(JSON.stringify({
       editor: 'nienow.grid',
       version: 1,
       rows: 2,
@@ -12,7 +12,7 @@ describe('transformations', () => {
         [{title: 'title1', text: 'text1'}, {title: 'title2', text: 'text2'}],
         [{title: 'title3', text: 'text3'}, {title: 'title4', text: 'text4'}]
       ]
-    });
+    }));
 
     expect(result).toEqual({
       editor: 'nienow.sticky',
